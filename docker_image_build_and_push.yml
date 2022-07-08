@@ -1,0 +1,29 @@
+- hosts: localhost
+  gather_facts: no
+
+  vars:
+    docker_id: cdm5212
+    docker_key: "{{ lookup('env', 'DOCKER_KEY') }}"
+    image_tag : "{{ lookup('env', 'BUILD_NUMBER' }}"
+    image_name: "{{ docker_id }}/goorm-myweb:{{ image_tag }}"
+
+  tasks:
+  - block:
+    - name: Login to Docker Hub
+      docker_login:
+        username: "{{ docker_id }}"
+        password: "{{ docker_key }}"
+        state: present
+    - name: Image Build with WAR
+      docker_image:
+        build:
+          path: .
+          rm: yes
+        name: "{{ image_name }}"
+        push: yes
+        source: build
+    always:
+    - name: Logout to Docker Hub
+      docker_login:
+        username: "{{ docker_id }}"
+        state: absent
